@@ -28,22 +28,30 @@ class Gigas:
         Waits for transaction `transaction_id` to be completed or errored, with
         optional `polling_interval` and `max_retries`
         """
+        logging.info("Waiting for transaction_id: %s" % str(transaction_id))
         num_retries = 0
-        res = r.get(self.api_endpoint + "/transaction/" + str(transaction_id) + "/status", headers=self.headers)
 
-        if ("error" in res.json()):
-            if (res.json()["error"] == "Transaction not found"):
-                return "Not found"
+        while (True):
+            res = r.get(self.api_endpoint + "/transaction/" + str(transaction_id) + "/status", headers=self.headers)
+            logging.info("Status: %s" % str(res.json()))
+            if ("error" in res.json()):
+                if (res.json()["error"] == "Transaction not found"):
+                    logging.warning("Transaction %s not found" % str(transaction_id))
+                    return "Not found"
+                else:
+                    logging.error("Error waiting for transaction %s" % str(transaction_id))
+                    return "Error"
+            elif (res.json()["status"] == "complete"):
+                logging.info("Transaction %s complete" % str(transaction_id))
+                return "Complete"
             else:
-                return "Error"
-
-        while (res.json()["status"] != "complete"):
-            logging.info("Status: %s, retry: %i" % (res.json()["status"], num_retries))
-            num_retries += 1
-            if (num_retries >= max_retries):
-               return "Timeout"
-            res = r.get(self.api_endpoint + "/transaction/" + transaction_id + "/status", headers=self.headers)
-        return "Complete"
+                logging.info("Status: %s, retry: %i" % (res.json()["status"], num_retries))
+                num_retries += 1
+                if (num_retries >= max_retries):
+                    logging.warning("Too many retries for transaction %s" % str(transaction_id))
+                    return "Timeout"
+                else:
+                    continue
 
     def _update_temporary_token(self):
         """
@@ -88,6 +96,7 @@ class Gigas:
                 logging.error("Too many unauthorized access to API")
                 res.raise_for_status()
         transaction_id = res.json()["queue_token"]
+        logging.info("Creating vm - queue_token: %s" % transaction_id)
         machine_id = res.json()["resource"]["id"]
         transaction_result = self._wait_for_transaction(transaction_id)
         if ((transaction_result == "Complete") or (transaction_result == "Not found")):
