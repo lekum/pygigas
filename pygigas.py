@@ -1,4 +1,5 @@
 import logging
+import pprint
 import requests as r
 from time import sleep
 from os import environ
@@ -139,6 +140,8 @@ class GigasVM:
         """
         Copies the attributes in the vm_attributes dict to the instance
         """
+        logging.info("Creating vim with attributes")
+        logging.info(pprint.pprint(vm_attributes.items))
         for key,value in vm_attributes.items():
             setattr(self, key, value)
 
