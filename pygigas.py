@@ -141,7 +141,7 @@ class GigasVM:
         Copies the attributes in the vm_attributes dict to the instance
         """
         logging.info("Creating vim with attributes")
-        logging.info(pprint.pprint(vm_attributes.items))
+        logging.info(pprint.pprint(vm_attributes))
         for key,value in vm_attributes.items():
             setattr(self, key, value)
 
