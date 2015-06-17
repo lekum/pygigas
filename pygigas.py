@@ -129,6 +129,8 @@ class Gigas:
         Deletes an existing GigasVM object
         """
         res = r.delete(self.api_endpoint + "/virtual_machine/" + str(vm.id), headers=self.headers)
+        transaction_id = res.json()["queue_token"]
+        transaction_result = self._wait_for_transaction(transaction_id)
         del vm
 
 class GigasVM:
