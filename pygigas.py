@@ -84,6 +84,7 @@ class Gigas:
                    'template_id': template_id,
                   }
         res = r.post(self.api_endpoint + "/virtual_machine", data=payload, headers=self.headers)
+        logging.info("VM creation result: %s" % res.json())
         if res.status_code == r.codes.unauthorized:
             logging.warning("Unauthorized access to API")
             self.auth_retries += 1
@@ -99,6 +100,7 @@ class Gigas:
         transaction_id = res.json()["queue_token"]
         logging.info("Creating vm - queue_token: %s" % transaction_id)
         machine_id = res.json()["resource"]["id"]
+        self._wait_for_machine_to_be_built(machine_id)
         transaction_result = self._wait_for_transaction(transaction_id)
         if ((transaction_result == "Complete") or (transaction_result == "Not found")):
             machine_details = self.get_machine_info(machine_id)
@@ -132,6 +134,26 @@ class Gigas:
         transaction_id = res.json()["queue_token"]
         transaction_result = self._wait_for_transaction(transaction_id)
         del vm
+
+    def _wait_for_machine_to_be_built(self, machine_id, polling_interval=5, max_retries=48):
+        """
+        Waits for a vm to be in 'built state'
+        """
+        num_retries = 0
+        ready = False
+        while (not ready and num_retries <= max_retries):
+            res = r.get(self.api_endpoint + "/virtual_machine/" + str(machine_id), headers=self.headers)
+            vm_attributes = res.json()
+            status = vm_attributes['status']
+            logging.info("Status of the VM: %s " % status)
+            if status != 'online':
+                logging.info("Waiting for %i seconds" % polling_interval)
+                sleep(polling_interval)
+                num_retries += 1
+                continue
+            else:
+                return True
+        return False
 
 class GigasVM:
     """
