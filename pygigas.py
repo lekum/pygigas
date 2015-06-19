@@ -173,5 +173,3 @@ if __name__ == '__main__':
 
     g = Gigas()
     vm = g.create_vm(memory = 512, cpus = 1, hostname = "test",label = "test-label", primary_disk_size = 20, swap_disk_size = 1,template_id = 70)
-    import pdb;pdb.set_trace()
-    g.delete_vm(vm)
