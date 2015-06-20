@@ -15,3 +15,6 @@ In order to use the API, two environment variables should exist:
 
 - `GIGAS_API_USER`
 - `GIGAS_API_PASSWORD`
+
+## TODO
+Fix queue status waiting (the current solution is a workaround)dd
